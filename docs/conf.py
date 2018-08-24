@@ -40,8 +40,20 @@ release = u'1.0.0'
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx.ext.autosectionlabel',
+    'sphinx.ext.autosummary',
     'sphinx.ext.coverage',
+    'sphinx.ext.doctest',
+    'sphinx.ext.extlinks',
+    'sphinx.ext.githubpages',
+    'sphinx.ext.graphviz',
+    'sphinx.ext.ifconfig',
+    'sphinx.ext.inheritance_diagram',
     'sphinx.ext.mathjax',
+    'sphinx.ext.napoleon',
+    'sphinx.ext.todo',
+    'sphinx.ext.viewcode',
+    'numpydoc'
 ]
 
 # Add any paths that contain templates here, relative to this directory.

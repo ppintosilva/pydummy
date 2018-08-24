@@ -11,6 +11,7 @@ Welcome to dummy's documentation!
    :caption: Contents:
 
    getting_started.rst
+   dummy.rst
 
 Indices and tables
 ==================
