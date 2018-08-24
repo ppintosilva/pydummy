@@ -15,11 +15,12 @@ tox
 
 Download asset and edit:
 
-- Names: module, functions, `setup.py`
-- Author data: `setup.py`
+- Names: module, functions, `setup.py`, `docs/config.py`
+- Author data: `setup.py`, `docs/config.py`
 - Dependencies: `requirements.txt`
-- Version number: `dummy/__init__.py`, `setup.py`
+- Version number: `dummy/__init__.py`, `setup.py`, `docs/config.py`
 - license
+- docs
 
 Remember:
 
