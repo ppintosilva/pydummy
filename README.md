@@ -1,5 +1,7 @@
 # pydummy
 
+[![Build Status - master](https://travis-ci.org/PedrosWits/pydummy.svg?branch=master)](https://travis-ci.org/PedrosWits/pydummy)
+
 A dummy template so you can get started with your python project.
 
 ## Requirements
