@@ -4,7 +4,7 @@ dummy package
 Submodules
 ----------
 
-dummy.dumdum module
+dumdum module
 ----------------------
 
 .. automodule:: dummy.dumdum
@@ -12,8 +12,9 @@ dummy.dumdum module
     :undoc-members:
     :show-inheritance:
 
-dummy.utils module
+utils module
 ----------------------
+.. autodata:: dummy.utils.settings
 
 .. automodule:: dummy.utils
     :members:
