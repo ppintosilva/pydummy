@@ -15,7 +15,9 @@ tox
 
 ## Usage
 
-Download asset and edit:
+Download asset.
+
+Edit:
 
 - Names: module, functions, `setup.py`, `docs/config.py`
 - Author data: `setup.py`, `docs/config.py`
