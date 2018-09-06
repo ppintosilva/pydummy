@@ -11,3 +11,11 @@ dummy.dumdum module
     :members:
     :undoc-members:
     :show-inheritance:
+
+dummy.utils module
+----------------------
+
+.. automodule:: dummy.utils
+    :members:
+    :undoc-members:
+    :show-inheritance:
