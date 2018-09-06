@@ -8,114 +8,84 @@
 # https://github.com/gboeing/osmnx/blob/master/osmnx/utils.py
 ################################################################################
 
-from . import settings
 import os
 import sys
 import unicodedata
 import logging as lg
 import datetime as dt
 
+###
+###
+
+settings = {
+    "app_name" : "pydummy",
+
+    "app_folder" : os.path.expanduser("~/.pydummy"),
+    "data_folder_name" : "data",
+    "logs_folder_name" : "logs",
+    "cache_folder_name" : "cache",
+
+    "log_to_file" : True,
+    "log_to_console" : False,
+    "cache_http" : True,
+
+    "log_default_level" : lg.INFO,
+
+    "default_user_agent" : "Python pydummy package (https://github.com/pedroswits/pydummy)",
+    "default_referer" : "Python pydummy package (https://github.com/pedroswits/pydummy)",
+    "default_accept_language" : "en"
+}
 
 ###
 ###
 
-def config(app_folder_location = settings.app_folder_location,
-           hide_app_folder = settings.hide_app_folder,
-           data_folder_name = settings.data_folder_name,
-           logs_folder_name = settings.logs_folder_name,
-           cache_folder_name = settings.cache_folder_name,
-           log_to_file = settings.log_to_file,
-           log_to_console = settings.log_to_console,
-           log_default_level = settings.log_default_level,
-           cache_http = settings.cache_http,
-           default_user_agent = settings.default_user_agent,
-           default_referer = settings.default_referer,
-           default_accept_language = settings.default_accept_language):
+class InvalidSetting(ValueError):
+    def __init__(self,*args,**kwargs):
+        Exception.__init__(self,*args,**kwargs)
+
+class ImmutableSetting(ValueError):
+    def __init__(self,*args,**kwargs):
+        Exception.__init__(self,*args,**kwargs)
+
+###
+###
+
+def config(**kwargs):
     """
-    Configure osmnx by setting the default global vars to desired values.
+    Configure dummy's settings
 
     Parameters
     ---------
-    app_folder_location : string
-        where to store app data
-    hide_app_folder : bool
-        whether to hide app folder or not
-    data_folder_name : string
-        name of folder containing data files
-    logs_folder_name : string
-        name of folder containing log files
-    cache_folder_name : string
-        name of folder containing cached http responses
-    cache_http : bool
-        if True, use a local cache to save/retrieve http responses instead of calling API repetitively for the same request URL
-    log_to_file : bool
-        if true, save log output to a log file in logs_folder
-    log_to_console : bool
-        if true, print log output to the console
-    log_default_level : int
-        one of the logger.level constants
-    default_user_agent : string
-        HTTP header user-agent
-    default_referer : string
-        HTTP header referer
-    default_accept_language : string
-        HTTP header accept-language
+    **kwargs
+        keyword arguments that exist in settings
+
+    Raises
+    ------
+    InvalidSetting
+        if keyword argument is not in settings
 
     Returns
     -------
     None
     """
 
-    # set each global variable to the passed-in parameter value
-    settings.app_folder_location = app_folder_location
-    settings.hide_app_folder = hide_app_folder
-    settings.data_folder_name = data_folder_name
-    settings.logs_folder_name = logs_folder_name
-    settings.cache_folder_name = cache_folder_name
-    settings.cache_http = cache_http
-    settings.log_to_file = log_to_file
-    settings.log_to_console = log_to_console
-    settings.log_default_level = log_default_level
-    settings.default_user_agent = default_user_agent
-    settings.default_referer = default_referer
-    settings.default_accept_language = default_accept_language
+    for key, value in kwargs.items():
+        if not key in settings:
+            raise InvalidSetting("No such setting: {}".format(key))
 
-    clean_logger()
-    log('Configured {}'.format(settings.app_name))
+        if key == "app_name":
+            raise ImmutableSetting("App name should not be changed.")
+
+        if key in {"app_folder", "logs_folder_name"}:
+            clean_logger()
+
+        settings[key] = value
+        log('Config: {} = {}'.format(key, value))
 
 ###
 ###
 
-def get_app_folder(app_folder_location = None,
-                   hide_app_folder = None):
-    """
-    Build path to app folder
-
-    Parameters
-    ----------
-    app_folder_location : string
-        location of main app directory
-    hide_app_folder : bool
-        whether to app folder is hidden or not
-
-    Returns
-    -------
-    string
-        path to app folder
-    """
-    if app_folder_location is None:
-        app_folder_location = settings.app_folder_location
-    if hide_app_folder is None:
-        hide_app_folder = settings.hide_app_folder
-
-    filename = "." + settings.app_name if hide_app_folder else settings.app_name
-    return os.path.join(os.path.expanduser(app_folder_location), filename)
-
-###
-###
-
-def create_folders(app_folder_location = None,
-                   hide_app_folder = None,
+def create_folders(app_folder = None,
                    logs_folder_name = None,
                    data_folder_name = None,
                    cache_folder_name = None):
@@ -124,10 +94,8 @@ def create_folders(app_folder_location = None,
 
     Parameters
     ----------
-    app_folder_location : string
+    app_folder : string
         location of main app directory
-    hide_app_folder : bool
-        whether to app folder is hidden or not
     logs_folder_name : string
         name of folder containing logs
     data_folder_name : string
@@ -139,19 +107,18 @@ def create_folders(app_folder_location = None,
     -------
     None
     """
-
-    if app_folder_location is None:
-        app_folder_location = settings.app_folder_location
-    if hide_app_folder is None:
-        hide_app_folder = settings.hide_app_folder
+    if app_folder is None:
+        app_folder = settings["app_folder"]
     if logs_folder_name is None:
-        logs_folder_name = settings.logs_folder_name
+        logs_folder_name = settings["logs_folder_name"]
     if data_folder_name is None:
-        data_folder_name = settings.data_folder_name
+        data_folder_name = settings["data_folder_name"]
     if cache_folder_name is None:
-        cache_folder_name = settings.cache_folder_name
+        cache_folder_name = settings["cache_folder_name"]
 
-    app_folder = get_app_folder(app_folder_location, hide_app_folder)
+
+    print("Create folders at {}".format(app_folder))
+
     if not os.path.exists(app_folder):
         os.makedirs(app_folder)
 
@@ -198,8 +165,8 @@ def make_str(value):
 
 def log(message,
         level = None,
-        name = None,
-        filename = None):
+        name = settings["app_name"],
+        filename = settings["app_name"]):
     """
     Write a message to the log file and/or print to the the console.
 
@@ -218,16 +185,11 @@ def log(message,
     -------
     None
     """
-
     if level is None:
-        level = settings.log_default_level
-    if name is None:
-        name = settings.app_name
-    if filename is None:
-        name = settings.app_name
+        level = settings["log_default_level"]
 
     # if logging to file is turned on
-    if settings.log_to_file:
+    if settings["log_to_file"]:
         # get the current logger (or create a new one, if none), then log
         # message at requested level
         logger = get_logger(level=level, name=name, filename=filename)
@@ -242,7 +204,7 @@ def log(message,
 
     # if logging to console is turned on, convert message to ascii and print to
     # the console
-    if settings.log_to_console:
+    if settings["log_to_console"]:
         # capture current stdout, then switch it to the console, print the
         # message, then switch back to what had been the stdout. this prevents
         # logging to notebook - instead, it goes to console
@@ -259,8 +221,8 @@ def log(message,
 ###
 
 def get_logger(level = None,
-               name = None,
-               filename = None):
+               name = settings["app_name"],
+               filename = settings["app_name"]):
     """
     Create a logger or return the current one if already instantiated.
 
@@ -279,25 +241,18 @@ def get_logger(level = None,
     """
 
     if level is None:
-        level = settings.log_default_level
-    if name is None:
-        name = settings.app_name
-    if filename is None:
-        filename = settings.app_name
+        level = settings["log_default_level"]
 
     logger = lg.getLogger(name)
 
     # if a logger with this name is not already set up
-    if len(logger.handlers) == 0:
+    if not getattr(logger, 'is_set', None):
+        # if the logs folder does not already exist, create it
+        create_folders()
 
         # get today's date and construct a log filename
         todays_date = dt.datetime.today().strftime('%Y_%m_%d')
-        log_filename = os.path.join(get_app_folder(), settings.logs_folder_name, '{}_{}.log'.format(filename, todays_date))
-
-        print(log_filename)
-
-        # if the logs folder does not already exist, create it
-        create_folders()
+        log_filename = os.path.join(settings["app_folder"], settings["logs_folder_name"], '{}_{}.log'.format(filename, todays_date))
 
         # create file handler and log formatter and set them up
         handler = lg.FileHandler(log_filename, encoding='utf-8')
@@ -305,13 +260,13 @@ def get_logger(level = None,
         handler.setFormatter(formatter)
         logger.addHandler(handler)
         logger.setLevel(level)
-        logger.handler_set = True
+        logger.is_set = True
 
     return logger
 
 ###
 
-def clean_logger(name = None):
+def clean_logger(name = settings["app_name"]):
     """
     Removes all handlers associated with a given logger
 
@@ -322,16 +277,18 @@ def clean_logger(name = None):
 
     Returns
     -------
-    None
+    logger.logger
     """
-    if name is None:
-        name = settings.app_name
 
     logger = lg.getLogger(name)
 
     handlers = logger.handlers
     for handler in handlers:
         logger.removeHandler(handler)
+
+    logger.is_set = False
+
+    return logger
 
 # def save_to_cache(url, response_json):
 #     """
