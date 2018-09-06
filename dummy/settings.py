@@ -13,7 +13,7 @@ import logging as lg
 
 app_name = "pydummy"
 
-app_folder_location = "." # or ~
+app_folder_location = "~"
 hide_app_folder = True
 data_folder_name = "data"
 logs_folder_name = "logs"
