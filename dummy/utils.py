@@ -1,6 +1,6 @@
 ################################################################################
 # Module: utils.py
-# Description: Utils package:
+# Description: Global settings, configuration, logging and caching
 # License: MIT, see full license in LICENSE.txt
 # Web: https://github.com/pedroswits/pydummy
 ################################################################################
@@ -14,6 +14,7 @@ import sys
 import unicodedata
 import logging as lg
 import datetime as dt
+
 
 ###
 ###
@@ -79,13 +80,14 @@ def config(app_folder_location = settings.app_folder_location,
     settings.default_referer = default_referer
     settings.default_accept_language = default_accept_language
 
+    clean_logger()
     log('Configured {}'.format(settings.app_name))
 
 ###
 ###
 
-def get_app_folder(app_folder_location = settings.app_folder_location,
-                   hide_app_folder = settings.hide_app_folder):
+def get_app_folder(app_folder_location = None,
+                   hide_app_folder = None):
     """
     Build path to app folder
 
@@ -101,17 +103,22 @@ def get_app_folder(app_folder_location = settings.app_folder_location,
     string
         path to app folder
     """
+    if app_folder_location is None:
+        app_folder_location = settings.app_folder_location
+    if hide_app_folder is None:
+        hide_app_folder = settings.hide_app_folder
+
     filename = "." + settings.app_name if hide_app_folder else settings.app_name
-    return os.path.join(app_folder_location, filename)
+    return os.path.join(os.path.expanduser(app_folder_location), filename)
 
 ###
 ###
 
-def create_folders(app_folder_location = settings.app_folder_location,
-                   hide_app_folder = settings.hide_app_folder,
-                   logs_folder_name = settings.logs_folder_name,
-                   data_folder_name = settings.data_folder_name,
-                   cache_folder_name = settings.cache_folder_name):
+def create_folders(app_folder_location = None,
+                   hide_app_folder = None,
+                   logs_folder_name = None,
+                   data_folder_name = None,
+                   cache_folder_name = None):
     """
     Creates app folders: parent, data, logs and cache
 
@@ -132,6 +139,18 @@ def create_folders(app_folder_location = settings.app_folder_location,
     -------
     None
     """
+
+    if app_folder_location is None:
+        app_folder_location = settings.app_folder_location
+    if hide_app_folder is None:
+        hide_app_folder = settings.hide_app_folder
+    if logs_folder_name is None:
+        logs_folder_name = settings.logs_folder_name
+    if data_folder_name is None:
+        data_folder_name = settings.data_folder_name
+    if cache_folder_name is None:
+        cache_folder_name = settings.cache_folder_name
+
     app_folder = get_app_folder(app_folder_location, hide_app_folder)
     if not os.path.exists(app_folder):
         os.makedirs(app_folder)
@@ -178,9 +197,9 @@ def make_str(value):
 ###
 
 def log(message,
-        level = settings.log_default_level,
-        name = settings.app_name,
-        filename = settings.app_name):
+        level = None,
+        name = None,
+        filename = None):
     """
     Write a message to the log file and/or print to the the console.
 
@@ -199,6 +218,13 @@ def log(message,
     -------
     None
     """
+
+    if level is None:
+        level = settings.log_default_level
+    if name is None:
+        name = settings.app_name
+    if filename is None:
+        name = settings.app_name
 
     # if logging to file is turned on
     if settings.log_to_file:
@@ -232,9 +258,9 @@ def log(message,
 ###
 ###
 
-def get_logger(level = settings.log_default_level,
-               name = settings.app_name,
-               filename = settings.app_name):
+def get_logger(level = None,
+               name = None,
+               filename = None):
     """
     Create a logger or return the current one if already instantiated.
 
@@ -252,14 +278,23 @@ def get_logger(level = settings.log_default_level,
     logger.logger
     """
 
+    if level is None:
+        level = settings.log_default_level
+    if name is None:
+        name = settings.app_name
+    if filename is None:
+        filename = settings.app_name
+
     logger = lg.getLogger(name)
 
     # if a logger with this name is not already set up
-    if not getattr(logger, 'handler_set', None):
+    if len(logger.handlers) == 0:
 
         # get today's date and construct a log filename
         todays_date = dt.datetime.today().strftime('%Y_%m_%d')
         log_filename = os.path.join(get_app_folder(), settings.logs_folder_name, '{}_{}.log'.format(filename, todays_date))
+
+        print(log_filename)
 
         # if the logs folder does not already exist, create it
         create_folders()
@@ -274,6 +309,29 @@ def get_logger(level = settings.log_default_level,
 
     return logger
 
+###
+
+def clean_logger(name = None):
+    """
+    Removes all handlers associated with a given logger
+
+    Parameters
+    ----------
+    name : string
+        name of the logger
+
+    Returns
+    -------
+    None
+    """
+    if name is None:
+        name = settings.app_name
+
+    logger = lg.getLogger(name)
+
+    handlers = logger.handlers
+    for handler in handlers:
+        logger.removeHandler(handler)
 
 # def save_to_cache(url, response_json):
 #     """
