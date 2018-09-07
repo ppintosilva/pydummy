@@ -32,9 +32,10 @@ Remember:
 - To package/test locally just run: `tox`
 
 
-## Opinions
+## Features
 
 - **packaging**: setup.py and tox
 - **testing**: pytest and tox
 - **docs**: sphinx
 - **continuous integration**: travis-ci
+- **global settings**, **logging** and **http caching**
