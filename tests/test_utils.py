@@ -1,8 +1,13 @@
-import pytest
-import logging as lg
-import dummy
 import os
+import ast
+import json
+import hashlib
+import requests
+import logging as lg
 import datetime as dt
+
+import dummy
+import pytest
 
 ###
 
@@ -63,3 +68,30 @@ def test_config():
     dummy.config(app_folder = "/tmp/pydummy")
 
     assert_file_structure(assert_logfile = True)
+
+def test_cache():
+    dummy.config(cache_http = True)
+
+    url = requests.Request('GET', "https://nominatim.openstreetmap.org/?format=json&addressdetails=1&q=Newcastle+A186+Westgate+Rd").prepare().url
+
+    response_json = requests.get(url).json()
+
+    dummy.save_to_cache(url, response_json)
+
+    cache_folder = os.path.join(dummy.settings["app_folder"], dummy.settings["cache_folder_name"])
+    cache_file = os.path.join(cache_folder, os.extsep.join([hashlib.md5(url.encode('utf-8')).hexdigest(), 'json']))
+
+    assert os.path.exists(cache_file)
+
+    with open(cache_file, encoding='utf-8') as cache_file_handler:
+        cache_content = json.loads(cache_file_handler.read())
+
+    json_str = dummy.make_str(json.dumps(response_json))
+    json_str_from_cache = dummy.get_from_cache(url)
+
+    assert ast.literal_eval(json_str) == cache_content
+    assert cache_content == json_str_from_cache
+
+    os.remove(cache_file)
+
+    assert_file_structure(assert_logfile = False)
