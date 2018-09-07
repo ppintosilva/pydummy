@@ -8,8 +8,11 @@
 # https://github.com/gboeing/osmnx/blob/master/osmnx/utils.py
 ################################################################################
 
+import io
 import os
 import sys
+import json
+import hashlib
 import unicodedata
 import logging as lg
 import datetime as dt
@@ -115,9 +118,6 @@ def create_folders(app_folder = None,
         data_folder_name = settings["data_folder_name"]
     if cache_folder_name is None:
         cache_folder_name = settings["cache_folder_name"]
-
-
-    print("Create folders at {}".format(app_folder))
 
     if not os.path.exists(app_folder):
         os.makedirs(app_folder)
@@ -290,95 +290,102 @@ def clean_logger(name = settings["app_name"]):
 
     return logger
 
-# def save_to_cache(url, response_json):
-#     """
-#     Save an HTTP response json object to the cache.
-#     If the request was sent to server via POST instead of GET, then URL should
-#     be a GET-style representation of request. Users should always pass
-#     OrderedDicts instead of dicts of parameters into request functions, so that
-#     the parameters stay in the same order each time, producing the same URL
-#     string, and thus the same hash. Otherwise the cache will eventually contain
-#     multiple saved responses for the same request because the URL's parameters
-#     appeared in a different order each time.
-#     Parameters
-#     ----------
-#     url : string
-#         the url of the request
-#     response_json : dict
-#         the json response
-#     Returns
-#     -------
-#     None
-#     """
-#     if settings.use_cache:
-#         if response_json is None:
-#             log('Saved nothing to cache because response_json is None')
-#         else:
-#             # create the folder on the disk if it doesn't already exist
-#             if not os.path.exists(settings.cache_folder):
-#                 os.makedirs(settings.cache_folder)
-#
-#             # hash the url (to make filename shorter than the often extremely
-#             # long url)
-#             filename = hashlib.md5(url.encode('utf-8')).hexdigest()
-#             cache_path_filename = os.path.join(settings.cache_folder, os.extsep.join([filename, 'json']))
-#
-#             # dump to json, and save to file
-#             json_str = make_str(json.dumps(response_json))
-#             with io.open(cache_path_filename, 'w', encoding='utf-8') as cache_file:
-#                 cache_file.write(json_str)
-#
-#             log('Saved response to cache file "{}"'.format(cache_path_filename))
-#
-#
-# def get_from_cache(url):
-#     """
-#     Retrieve a HTTP response json object from the cache.
-#     Parameters
-#     ----------
-#     url : string
-#         the url of the request
-#     Returns
-#     -------
-#     response_json : dict
-#     """
-#     # if the tool is configured to use the cache
-#     if settings.use_cache:
-#         # determine the filename by hashing the url
-#         filename = hashlib.md5(url.encode('utf-8')).hexdigest()
-#
-#         cache_path_filename = os.path.join(settings.cache_folder, os.extsep.join([filename, 'json']))
-#         # open the cache file for this url hash if it already exists, otherwise
-#         # return None
-#         if os.path.isfile(cache_path_filename):
-#             with io.open(cache_path_filename, encoding='utf-8') as cache_file:
-#                 response_json = json.load(cache_file)
-#             log('Retrieved response from cache file "{}" for URL "{}"'.format(cache_path_filename, url))
-#             return response_json
-#
-# def get_http_headers(user_agent=None, referer=None, accept_language=None):
-#     """
-#     Update the default requests HTTP headers with OSMnx info.
-#     Parameters
-#     ----------
-#     user_agent : str
-#         the user agent string, if None will set with OSMnx default
-#     referer : str
-#         the referer string, if None will set with OSMnx default
-#     accept_language : str
-#         make accept-language explicit e.g. for consistent nominatim result sorting
-#     Returns
-#     -------
-#     headers : dict
-#     """
-#
-#     if user_agent is None:
-#         user_agent = settings.default_user_agent
-#     if referer is None:
-#         referer = settings.default_referer
-#     if accept_language is None:
-#         accept_language = settings.default_accept_language
-#
-#     headers = requests.utils.default_headers()
-#     headers.update({'User-Agent': user_agent, 'referer': referer, 'Accept-Language': accept_language})
-#     return headers
+###
+###
+
+def save_to_cache(url, response_json):
+    """
+    Save an HTTP response json object to the cache.
+    If the request was sent to server via POST instead of GET, then URL should
+    be a GET-style representation of request. Users should always pass
+    OrderedDicts instead of dicts of parameters into request functions, so that
+    the parameters stay in the same order each time, producing the same URL
+    string, and thus the same hash. Otherwise the cache will eventually contain
+    multiple saved responses for the same request because the URL's parameters
+    appeared in a different order each time.
+    Parameters
+    ----------
+    url : string
+        the url of the request
+    response_json : dict
+        the json response
+    Returns
+    -------
+    None
+    """
+    if settings["cache_http"]:
+        if response_json is None:
+            log('Saved nothing to cache because response_json is None')
+        else:
+            # create the folder on the disk if it doesn't already exist
+            create_folders()
+
+            # hash the url (to make filename shorter than the often extremely
+            # long url)
+            filename = hashlib.md5(url.encode('utf-8')).hexdigest()
+            cache_path_filename = os.path.join(settings["app_folder"], settings["cache_folder_name"], os.extsep.join([filename, 'json']))
+
+            # dump to json, and save to file
+            json_str = make_str(json.dumps(response_json))
+            with io.open(cache_path_filename, 'w', encoding='utf-8') as cache_file:
+                cache_file.write(json_str)
+
+            log('Saved response to cache file "{}"'.format(cache_path_filename))
+
+###
+###
+
+def get_from_cache(url):
+    """
+    Retrieve a HTTP response json object from the cache.
+    Parameters
+    ----------
+    url : string
+        the url of the request
+    Returns
+    -------
+    response_json : dict
+    """
+    # if the tool is configured to use the cache
+    if settings["cache_http"]:
+        # determine the filename by hashing the url
+        filename = hashlib.md5(url.encode('utf-8')).hexdigest()
+
+        cache_path_filename = os.path.join(settings["app_folder"], settings["cache_folder_name"], os.extsep.join([filename, 'json']))
+        # open the cache file for this url hash if it already exists, otherwise
+        # return None
+        if os.path.isfile(cache_path_filename):
+            with io.open(cache_path_filename, encoding='utf-8') as cache_file:
+                response_json = json.load(cache_file)
+            log('Retrieved response from cache file "{}" for URL "{}"'.format(cache_path_filename, url))
+            return response_json
+
+###
+###
+
+def get_http_headers(user_agent=None, referer=None, accept_language=None):
+    """
+    Update the default requests HTTP headers with OSMnx info.
+    Parameters
+    ----------
+    user_agent : str
+        the user agent string, if None will set with OSMnx default
+    referer : str
+        the referer string, if None will set with OSMnx default
+    accept_language : str
+        make accept-language explicit e.g. for consistent nominatim result sorting
+    Returns
+    -------
+    headers : dict
+    """
+
+    if user_agent is None:
+        user_agent = settings["default_user_agent"]
+    if referer is None:
+        referer = settings["default_referer"]
+    if accept_language is None:
+        accept_language = settings["default_accept_language"]
+
+    headers = requests.utils.default_headers()
+    headers.update({'User-Agent': user_agent, 'referer': referer, 'Accept-Language': accept_language})
+    return headers
